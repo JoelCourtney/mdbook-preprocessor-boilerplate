@@ -3,7 +3,7 @@
 //! Handles the CLI, checks whether the renderer is supported, checks the mdbook version, and runs
 //! your preprocessor. All you need to do is implement the [mdbook::preprocess::Preprocessor] trait.
 //!
-//! This boilerplate has a few heavy dependencies (like serde_json). If you want a small executable,
+//! This boilerplate has a few heavy dependencies (like serde_json and mdbook). If you want a small executable,
 //! you'll have to implement this functionality yourself.
 //!
 //! # Example
