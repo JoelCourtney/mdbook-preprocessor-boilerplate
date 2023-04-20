@@ -68,7 +68,7 @@ pub fn run(preprocessor: impl Preprocessor, description: &str) {
     if let Some(sub_args) = matches.subcommand_matches("supports") {
         handle_supports(preprocessor, sub_args);
     } else if let Err(e) = handle_preprocessing(preprocessor) {
-        eprintln!("{}", e);
+        print_error(&e);
         process::exit(1);
     }
 }
@@ -106,4 +106,13 @@ fn handle_supports(pre: impl Preprocessor, sub_args: &ArgMatches) -> ! {
     } else {
         process::exit(1);
     }
+}
+
+fn print_error(error: &anyhow::Error) {
+    let mut chain = error.chain();
+    eprintln!("{}", chain.next().unwrap());
+    for e in chain {
+        eprintln!("  - {e}");
+    }
+    eprintln!();
 }
