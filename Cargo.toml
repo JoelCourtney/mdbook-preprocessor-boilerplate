@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-preprocessor-boilerplate"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Joel Courtney <joel.e.courtney@gmail.com>"]
 description = "Boilerplate code for mdbook preprocessors"
@@ -10,8 +10,8 @@ repository = "https://github.com/JoelCourtney/mdbook-preprocessor-boilerplate"
 license = "GPL-3.0"
 
 [dependencies]
-mdbook = { version = "0.4.14", default-features = false }
-clap = { version = "2.34", default-features = false }
-anyhow = "1.0"
-serde_json = "1.0"
-semver = "1.0"
+mdbook = { version = "0.4.28", default-features = false }
+clap = { version = "2.34.0", default-features = false }
+anyhow = "1.0.70"
+serde_json = "1.0.96"
+semver = "1.0.17"
