@@ -49,11 +49,11 @@
 //! }
 //! ```
 
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
-use std::{process, io};
-use clap::{App, Arg, ArgMatches, SubCommand};
 use anyhow::Result;
+use clap::{App, Arg, ArgMatches, SubCommand};
+use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
 use semver::{Version, VersionReq};
+use std::{io, process};
 
 /// Checks renderer support and runs the preprocessor.
 pub fn run(preprocessor: impl Preprocessor, description: &str) {
@@ -62,8 +62,9 @@ pub fn run(preprocessor: impl Preprocessor, description: &str) {
         .subcommand(
             SubCommand::with_name("supports")
                 .arg(Arg::with_name("renderer").required(true))
-                .about("Check whether a renderer is supported by this preprocessor")
-        ).get_matches();
+                .about("Check whether a renderer is supported by this preprocessor"),
+        )
+        .get_matches();
 
     if let Some(sub_args) = matches.subcommand_matches("supports") {
         handle_supports(preprocessor, sub_args);
