@@ -1,7 +1,7 @@
 //! Boilerplate code for [mdbook](https://rust-lang.github.io/mdBook/index.html) preprocessors.
 //!
 //! Handles the CLI, checks whether the renderer is supported, checks the mdbook version, and runs
-//! your preprocessor. All you need to do is implement the [mdbook::preprocess::Preprocessor] trait.
+//! your preprocessor. All you need to do is implement the [mdbook_preprocessor::Preprocessor] trait.
 //!
 //! This boilerplate has a few heavy dependencies (like serde_json and mdbook). If you want a small executable,
 //! you'll have to implement this functionality yourself.
@@ -12,8 +12,8 @@
 //! given by mdbook.
 //!
 //! ```no_run
-//! use mdbook::book::Book;
-//! use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+//! use mdbook_driver::book::Book;
+//! use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
 //! use anyhow::{bail, Result};
 //!
 //! fn main() {
@@ -33,35 +33,34 @@
 //!     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
 //!         // In testing we want to tell the preprocessor to blow up by setting a
 //!         // particular config value
-//!         if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
-//!             if nop_cfg.contains_key("blow-up") {
-//!                 anyhow::bail!("Boom!!1!");
-//!             }
+//!         if let Ok(Some(true)) = ctx.config.get(&format!("{}.blow-up", self.name())) {
+//!             anyhow::bail!("Boom!!1!");
 //!         }
 //!
 //!         // we *are* a no-op preprocessor after all
 //!         Ok(book)
 //!     }
 //!
-//!     fn supports_renderer(&self, renderer: &str) -> bool {
-//!         renderer != "not-supported"
+//!     fn supports_renderer(&self, renderer: &str) -> Result<bool>{
+//!         Ok(renderer != "not-supported")
 //!     }
 //! }
 //! ```
 
 use anyhow::Result;
-use clap::{App, Arg, ArgMatches, SubCommand};
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor};
+use clap::{Arg, ArgMatches, Command};
+use mdbook_preprocessor::{parse_input, Preprocessor};
 use semver::{Version, VersionReq};
 use std::{io, process};
 
 /// Checks renderer support and runs the preprocessor.
-pub fn run(preprocessor: impl Preprocessor, description: &str) {
-    let matches = App::new(preprocessor.name())
+pub fn run(preprocessor: impl Preprocessor, description: &'static str) {
+    let name = preprocessor.name().to_string();
+    let matches = Command::new(name)
         .about(description)
         .subcommand(
-            SubCommand::with_name("supports")
-                .arg(Arg::with_name("renderer").required(true))
+            Command::new("supports")
+                .arg(Arg::new("renderer").required(true))
                 .about("Check whether a renderer is supported by this preprocessor"),
         )
         .get_matches();
@@ -75,17 +74,17 @@ pub fn run(preprocessor: impl Preprocessor, description: &str) {
 }
 
 fn handle_preprocessing(pre: impl Preprocessor) -> Result<()> {
-    let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
+    let (ctx, book) = parse_input(io::stdin())?;
 
     let book_version = Version::parse(&ctx.mdbook_version)?;
-    let version_req = VersionReq::parse(mdbook::MDBOOK_VERSION)?;
+    let version_req = VersionReq::parse(mdbook_preprocessor::MDBOOK_VERSION)?;
 
     if !version_req.matches(&book_version) {
         eprintln!(
             "Warning: The {} plugin was built against version {} of mdbook, \
              but we're being called from version {}",
             pre.name(),
-            mdbook::MDBOOK_VERSION,
+            mdbook_preprocessor::MDBOOK_VERSION,
             ctx.mdbook_version
         );
     }
@@ -98,11 +97,13 @@ fn handle_preprocessing(pre: impl Preprocessor) -> Result<()> {
 }
 
 fn handle_supports(pre: impl Preprocessor, sub_args: &ArgMatches) -> ! {
-    let renderer = sub_args.value_of("renderer").expect("Required argument");
-    let supported = pre.supports_renderer(renderer);
+    let renderer = sub_args
+        .get_one::<String>("renderer")
+        .expect("Required argument");
+    let supported = pre.supports_renderer(&renderer);
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
-    if supported {
+    if matches!(supported, Ok(true)) {
         process::exit(0);
     } else {
         process::exit(1);
