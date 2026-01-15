@@ -12,15 +12,14 @@
 //! given by mdbook.
 //!
 //! ```no_run
-//! use mdbook_driver::book::Book;
-//! use mdbook_preprocessor::{Preprocessor, PreprocessorContext};
+//! use mdbook_preprocessor::{book::Book, Preprocessor, PreprocessorContext};
 //! use anyhow::{bail, Result};
 //!
-//! fn main() {
+//! fn main() -> Result<()> {
 //!     mdbook_preprocessor_boilerplate::run(
 //!         NoOpPreprocessor,
 //!         "An mdbook preprocessor that does nothing" // CLI description
-//!     );
+//!     )
 //! }
 //!
 //! struct NoOpPreprocessor;
@@ -47,16 +46,15 @@
 //! }
 //! ```
 
-use anyhow::Result;
 use clap::{Arg, ArgMatches, Command};
-use mdbook_preprocessor::{parse_input, Preprocessor};
+use mdbook_preprocessor::{errors::Result, parse_input, Preprocessor};
 use semver::{Version, VersionReq};
 use std::{io, process};
 
 /// Checks renderer support and runs the preprocessor.
-pub fn run(preprocessor: impl Preprocessor, description: &'static str) {
+pub fn run(preprocessor: impl Preprocessor, description: &'static str) -> Result<()> {
     let name = preprocessor.name().to_string();
-    let matches = Command::new(name)
+    let args = Command::new(name)
         .about(description)
         .subcommand(
             Command::new("supports")
@@ -65,11 +63,10 @@ pub fn run(preprocessor: impl Preprocessor, description: &'static str) {
         )
         .get_matches();
 
-    if let Some(sub_args) = matches.subcommand_matches("supports") {
-        handle_supports(preprocessor, sub_args);
-    } else if let Err(e) = handle_preprocessing(preprocessor) {
-        print_error(&e);
-        process::exit(1);
+    if let Some(supports) = args.subcommand_matches("supports") {
+        handle_supports(preprocessor, supports);
+    } else {
+        handle_preprocessing(preprocessor)
     }
 }
 
@@ -108,13 +105,4 @@ fn handle_supports(pre: impl Preprocessor, sub_args: &ArgMatches) -> ! {
     } else {
         process::exit(1);
     }
-}
-
-fn print_error(error: &anyhow::Error) {
-    let mut chain = error.chain();
-    eprintln!("{}", chain.next().unwrap());
-    for e in chain {
-        eprintln!("  - {e}");
-    }
-    eprintln!();
 }
