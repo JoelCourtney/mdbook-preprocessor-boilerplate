@@ -94,7 +94,7 @@ fn handle_supports(pre: impl Preprocessor, sub_args: &ArgMatches) -> ! {
     let renderer = sub_args
         .get_one::<String>("renderer")
         .expect("Required argument");
-    let supported = pre.supports_renderer(&renderer);
+    let supported = pre.supports_renderer(renderer);
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
     if matches!(supported, Ok(true)) {
