@@ -1,7 +1,7 @@
 [package]
 name = "mdbook-preprocessor-boilerplate"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 authors = ["Joel Courtney <joel.e.courtney@gmail.com>"]
 description = "Boilerplate code for mdbook preprocessors"
 keywords = ["mdbook", "proprocessor", "boilerplate"]
