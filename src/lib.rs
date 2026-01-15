@@ -3,9 +3,6 @@
 //! Handles the CLI, checks whether the renderer is supported, checks the mdbook version, and runs
 //! your preprocessor. All you need to do is implement the [mdbook_preprocessor::Preprocessor] trait.
 //!
-//! This boilerplate has a few heavy dependencies (like serde_json and mdbook). If you want a small executable,
-//! you'll have to implement this functionality yourself.
-//!
 //! # Example
 //!
 //! The following is functionally identical to the [No-Op Preprocessor Example](https://github.com/rust-lang/mdBook/blob/master/examples/nop-preprocessor.rs)
@@ -40,14 +37,14 @@
 //!         Ok(book)
 //!     }
 //!
-//!     fn supports_renderer(&self, renderer: &str) -> Result<bool>{
+//!     fn supports_renderer(&self, renderer: &str) -> Result<bool> {
 //!         Ok(renderer != "not-supported")
 //!     }
 //! }
 //! ```
 
 use clap::{Arg, ArgMatches, Command};
-use mdbook_preprocessor::{errors::Result, parse_input, Preprocessor};
+use mdbook_preprocessor::{Preprocessor, errors::Result, parse_input};
 use semver::{Version, VersionReq};
 use std::{io, process};
 

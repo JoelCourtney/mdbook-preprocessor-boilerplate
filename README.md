@@ -3,10 +3,7 @@
 Boilerplate code for [mdbook](https://rust-lang.github.io/mdBook/index.html) preprocessors.
 
 Handles the CLI, checks whether the renderer is supported, checks the mdbook version, and runs
-your preprocessor. All you need to do is implement the [mdbook::preprocess::Preprocessor] trait.
-
-This boilerplate has a few heavy dependencies (like serde_json and mdbook). If you want a small executable,
-you'll have to implement this functionality yourself.
+your preprocessor. All you need to do is implement the [mdbook_preprocessor::Preprocessor] trait.
 
 ## Example
 
@@ -14,15 +11,14 @@ The following is functionally identical to the [No-Op Preprocessor Example](http
 given by mdbook.
 
 ```rust
-use mdbook::book::Book;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
+use mdbook_preprocessor::{book::Book, Preprocessor, PreprocessorContext};
 use anyhow::{bail, Result};
 
-fn main() {
+fn main() -> Result<()> {
     mdbook_preprocessor_boilerplate::run(
         NoOpPreprocessor,
         "An mdbook preprocessor that does nothing" // CLI description
-    );
+    )
 }
 
 struct NoOpPreprocessor;
@@ -35,18 +31,16 @@ impl Preprocessor for NoOpPreprocessor {
     fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
         // In testing we want to tell the preprocessor to blow up by setting a
         // particular config value
-        if let Some(nop_cfg) = ctx.config.get_preprocessor(self.name()) {
-            if nop_cfg.contains_key("blow-up") {
-                anyhow::bail!("Boom!!1!");
-            }
+        if let Ok(Some(true)) = ctx.config.get(&format!("{}.blow-up", self.name())) {
+            anyhow::bail!("Boom!!1!");
         }
 
         // we *are* a no-op preprocessor after all
         Ok(book)
     }
 
-    fn supports_renderer(&self, renderer: &str) -> bool {
-        renderer != "not-supported"
+    fn supports_renderer(&self, renderer: &str) -> Result<bool> {
+        Ok(renderer != "not-supported")
     }
 }
 ```
